@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DB_PATH="../storage/storage.db"
+DB_PATH="./storage/storage.db"
 
 if [ -f "$DB_PATH" ]; then
     if rm "$DB_PATH"; then
