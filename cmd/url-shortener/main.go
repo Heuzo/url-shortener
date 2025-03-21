@@ -28,7 +28,6 @@ func init() {
 	if err := godotenv.Load(); err != nil {
 		color.Red(".env file not found")
 	}
-
 }
 
 func main() {
