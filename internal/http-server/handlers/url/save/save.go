@@ -25,27 +25,30 @@ type Response struct {
 
 // New is a function to create handler to saving URL
 func New(log *slog.Logger, serviceDB storage.SQLService, config *cfg.Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(writer http.ResponseWriter, request *http.Request) {
 		const op = "handlers.url.save.New"
-		requestId := middleware.GetReqID(r.Context())
+		requestId := middleware.GetReqID(request.Context())
 		log = log.With(
 			slog.String("operation", op),
-			slog.String("request_id", middleware.GetReqID(r.Context())),
+			slog.String("request_id", requestId),
 		)
 		var req Request
-		err := render.DecodeJSON(r.Body, &req)
+		err := render.DecodeJSON(request.Body, &req)
 		if err != nil {
 			log.Error("failed to decode request body", sl.Err(err))
-			render.JSON(w, r, response.Error("failed to decode request"))
+			render.JSON(writer, request, response.Error("failed to decode request"))
 			return
 		}
 		log.Info("request body decoded", slog.Any("request", req))
-
+		var validateErr validator.ValidationErrors
 		// Валидируем поля в соответствии со struct-тегами
 		if errValid := validator.New().Struct(req); errValid != nil {
-			validateErr := errValid.(validator.ValidationErrors)
-			log.Error("invalid request", sl.Err(validateErr))
-			render.JSON(w, r, response.ValidationError(validateErr))
+			if errors.As(errValid, &validateErr) {
+				log.Error("invalid request", sl.Err(validateErr))
+				render.JSON(writer, request, response.ValidationError(validateErr))
+				return
+			}
+			log.Error("error while validating: ", sl.Err(errValid))
 			return
 		}
 
@@ -58,14 +61,14 @@ func New(log *slog.Logger, serviceDB storage.SQLService, config *cfg.Config) htt
 		if err != nil {
 			if errors.Is(err, storage.ErrURLExists) {
 				log.Info("url already exists", slog.String("url", req.URL))
-				render.JSON(w, r, response.Error("url already exist"))
+				render.JSON(writer, request, response.Error("url already exist"))
 				return
 			}
 			log.Error("failed to save url", sl.Err(err))
-			render.JSON(w, r, response.Error("failed to save url"))
+			render.JSON(writer, request, response.Error("failed to save url"))
 			return
 		}
-		render.JSON(w, r, response.OK(alias))
+		render.JSON(writer, request, response.OK(alias))
 		log.Info("url successfully saved", slog.Int64("id", id))
 	}
 }
