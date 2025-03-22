@@ -2,6 +2,7 @@ package redirect
 
 import (
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/render"
 	"log/slog"
 	"net/http"
 	cfg "url-shortener/internal/config"
@@ -16,5 +17,18 @@ func New(log *slog.Logger, serviceDB storage.SQLService, config *cfg.Config) htt
 			slog.String("operation", op),
 			slog.String("request_id", requestId),
 		)
+
+		alias := request.URL.Path[1:]
+
+		url, errDB := serviceDB.GetURL(alias)
+		log.Info("Getted url", "url", url)
+		if errDB != nil {
+			slog.Error("failed to get url:", errDB)
+			render.JSON(writer, request, errDB)
+			return
+		}
+		writer.Header().Set("Location", url)
+		writer.WriteHeader(http.StatusMovedPermanently)
+		log.Info("successfully redirection", slog.String("url", url))
 	}
 }

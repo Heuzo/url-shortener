@@ -71,14 +71,16 @@ func (s *Storage) GetURL(alias string) (string, error) {
 	const op = "storage.sqlite.GetURL"
 	var resURL string
 
-	stmt, err := s.db.Prepare("SELECT url FROM url WHERE alias = ?")
+	stmt, err := s.db.Prepare("SELECT url FROM url WHERE alias like ?")
 	if err != nil {
 		return "", fmt.Errorf("%s: prepare statement:  %w", op, err)
 	}
-	row := stmt.QueryRow(alias)
-	err = row.Scan(&resURL)
+	defer stmt.Close() // Закрытие подготовленного запроса
 
-	if err != nil {
+	// Выполнение запроса и сканирование результата
+	errDBExec := stmt.QueryRow(alias).Scan(&resURL)
+
+	if errDBExec != nil {
 		// Проверяем, связана ли ошибка с отсутствием данных
 		if errors.Is(err, sql.ErrNoRows) {
 			return "", storage.ErrURLNotFound
