@@ -8,6 +8,7 @@ var (
 	ErrAliasNotFound = errors.New("alias not found")
 )
 
+//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=SQLService
 type SQLService interface {
 	SaveURL(urlToSave string, alias string) (int64, error)
 	GetURL(alias string) (string, error)
