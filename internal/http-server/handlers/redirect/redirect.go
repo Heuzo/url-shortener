@@ -1,10 +1,12 @@
 package redirect
 
 import (
+	"errors"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"log/slog"
 	"net/http"
+	"url-shortener/internal/lib/logger/sl"
 	"url-shortener/internal/storage"
 )
 
@@ -21,9 +23,13 @@ func New(log *slog.Logger, serviceDB storage.SQLService) http.HandlerFunc {
 
 		url, errDB := serviceDB.GetURL(alias)
 		log.Info("Getted alias", "alias", alias)
-		if errDB != nil {
-			slog.Error("failed to get url by given alias:", errDB)
+		if errors.Is(errDB, storage.ErrURLNotFound) {
+			log.Error("url not found by gien alias", "alias", alias)
 			writer.WriteHeader(http.StatusNotFound)
+		}
+		if errDB != nil {
+			log.Error("failed to get url by given alias:", sl.Err(errDB))
+			writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		writer.Header().Set("Location", url)
