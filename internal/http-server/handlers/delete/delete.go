@@ -1,4 +1,4 @@
-package redirect
+package delete
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ import (
 
 func New(log *slog.Logger, serviceDB storage.SQLService) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		const op = "handlers.url.redirect.New"
+		const op = "handlers.url.redirect.Delete"
 		requestId := middleware.GetReqID(request.Context())
 		log = log.With(
 			slog.String("operation", op),
@@ -32,8 +32,7 @@ func New(log *slog.Logger, serviceDB storage.SQLService) http.HandlerFunc {
 			writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		writer.Header().Set("Location", url)
-		writer.WriteHeader(http.StatusFound)
+		http.Redirect(writer, request, url, http.StatusFound)
 		log.Info("successfully redirection", slog.String("url", url))
 	}
 }
