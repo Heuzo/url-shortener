@@ -32,8 +32,7 @@ func New(log *slog.Logger, serviceDB storage.SQLService) http.HandlerFunc {
 			writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		writer.Header().Set("Location", url)
-		writer.WriteHeader(http.StatusMovedPermanently)
+		http.Redirect(writer, request, url, http.StatusFound)
 		log.Info("successfully redirection", slog.String("url", url))
 	}
 }
