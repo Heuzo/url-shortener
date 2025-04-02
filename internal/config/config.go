@@ -18,6 +18,8 @@ type HTTPServer struct {
 	Address     string        `yaml:"address" env:"ADDRESS" env-required:"true"`
 	Timeout     time.Duration `yaml:"timeout" env:"TIMEOUT" env-required:"true"`
 	IdleTimeout time.Duration `yaml:"idle_timeout" env:"IDLE_TIMEOUT" env-required:"true"`
+	User        string        `yaml:"user" env:"HTTP_SERVER_USER" env-required:"true"`
+	Password    string        `yaml:"password" env:"HTTP_SERVER_PASSWORD" env-required:"true"`
 }
 
 func MustLoad() *Config {
