@@ -60,10 +60,10 @@ func main() {
 		r.Use(middleware.BasicAuth("url-shortener", map[string]string{
 			cfg.HTTPServer.User: cfg.HTTPServer.Password,
 		}))
-		r.Post("/", save.New(log, storage, cfg))
-		r.Delete("/{alias}", delete.New(log, storage))
+		r.Post("/url", save.New(log, storage, cfg))
+		r.Delete("/url/{alias}", delete.New(log, storage))
 	})
-	router.Get("/{alias}", redirect.New(log, storage))
+	router.Get("/url/{alias}", redirect.New(log, storage))
 
 	log.Info("starting server", slog.String("address", cfg.Address))
 
